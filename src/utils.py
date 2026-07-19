@@ -54,7 +54,10 @@ def coerce_numeric_columns(df: pd.DataFrame, exclude: Iterable[str] | None = Non
     coerced = df.copy()
     for column in coerced.columns:
         if column not in excluded:
-            coerced[column] = pd.to_numeric(coerced[column], errors="ignore")
+            try:
+                coerced[column] = pd.to_numeric(coerced[column], errors="coerce")
+            except (ValueError, TypeError):
+                pass  # Leave the column as-is if conversion fails
     return coerced
 
 

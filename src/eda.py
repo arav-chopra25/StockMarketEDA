@@ -50,7 +50,7 @@ def detect_outliers_zscore(dataframe: pd.DataFrame, column: str, threshold: floa
     return dataframe.loc[dataframe[column].dropna().index[mask]].copy()
 
 
-def seasonality_profile(dataframe: pd.DataFrame, date_column: str = "timestamp", value_column: str = "close") -> pd.DataFrame:
+def seasonality_profile(dataframe: pd.DataFrame, date_column: str = "date", value_column: str = "close") -> pd.DataFrame:
     """Create a month-by-year seasonality table."""
 
     seasonal = dataframe.copy()
@@ -60,7 +60,7 @@ def seasonality_profile(dataframe: pd.DataFrame, date_column: str = "timestamp",
     return seasonal.pivot_table(index="year", columns="month", values=value_column, aggfunc="mean")
 
 
-def trend_by_period(dataframe: pd.DataFrame, date_column: str = "timestamp", value_column: str = "close", rule: str = "M") -> pd.DataFrame:
+def trend_by_period(dataframe: pd.DataFrame, date_column: str = "date", value_column: str = "close", rule: str = "M") -> pd.DataFrame:
     """Aggregate prices by a time frequency such as monthly or quarterly."""
 
     trend = dataframe.copy()
@@ -68,7 +68,7 @@ def trend_by_period(dataframe: pd.DataFrame, date_column: str = "timestamp", val
     return trend.set_index(date_column)[value_column].resample(rule).mean().to_frame(name=f"{value_column}_mean")
 
 
-def seasonal_decomposition_report(dataframe: pd.DataFrame, date_column: str = "timestamp", value_column: str = "close", period: int = 30):
+def seasonal_decomposition_report(dataframe: pd.DataFrame, date_column: str = "date", value_column: str = "close", period: int = 30):
     """Run classical seasonal decomposition when there is enough history."""
 
     series = dataframe.copy().sort_values(date_column)

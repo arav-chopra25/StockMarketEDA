@@ -42,7 +42,7 @@ def _chronological_split(dataframe: pd.DataFrame, test_size: float = 0.2) -> tup
 def _select_feature_columns(dataframe: pd.DataFrame, target_column: str, feature_columns: list[str] | None) -> list[str]:
     if feature_columns:
         return feature_columns
-    excluded = {target_column, f"target_{target_column}", "timestamp", "symbol", "day_name", "month_name"}
+    excluded = {target_column, f"target_{target_column}", "date", "symbol", "day_name", "month_name"}
     numeric_columns = dataframe.select_dtypes(include=[np.number]).columns.tolist()
     return [column for column in numeric_columns if column not in excluded]
 

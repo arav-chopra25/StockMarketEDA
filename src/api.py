@@ -6,7 +6,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
-import yfinance as yf
+
+try:
+    import yfinance as yf
+except ModuleNotFoundError:  # pragma: no cover - exercised when dependency is missing
+    yf = None
 
 from .config import RAW_DATA_DIR
 
@@ -38,6 +42,11 @@ def fetch_stock_data(ticker: str, start_date: str, end_date: str) -> pd.DataFram
         range.
     """
 
+    if yf is None:
+        raise ImportError(
+            "yfinance is required to download new market data. Install it or use a saved raw CSV."
+        )
+
     downloaded = yf.download(
         ticker,
         start=start_date,
@@ -55,7 +64,7 @@ def fetch_stock_data(ticker: str, start_date: str, end_date: str) -> pd.DataFram
         )
 
     if isinstance(downloaded.columns, pd.MultiIndex):
-        downloaded.columns = downloaded.columns.get_level_values(-1)
+        downloaded.columns = downloaded.columns.get_level_values(0)
 
     downloaded = downloaded.reset_index()
     first_column = downloaded.columns[0]

@@ -49,8 +49,14 @@ def _load_or_fetch(symbol: str, outputsize: str = "full") -> pd.DataFrame:
     if local_frame is not None:
         return local_frame
 
-    client = AlphaVantageClient()
-    raw_frame = client.fetch_daily_adjusted(symbol=symbol, outputsize=outputsize)
+    try:
+        client = AlphaVantageClient()
+        raw_frame = client.fetch_daily_adjusted(symbol=symbol, outputsize=outputsize)
+    except ImportError as exc:
+        raise RuntimeError(
+            f"Cannot load '{symbol}' because no local CSV was found and yfinance is not available."
+        ) from exc
+
     save_dataframe(raw_frame, RAW_DATA_DIR / f"{symbol.upper()}_daily_adjusted.csv")
     return raw_frame
 
@@ -104,19 +110,28 @@ def _render_charts(dataframe: pd.DataFrame, controls: dict) -> None:
     tabs = st.tabs(["Overview", "Indicators", "Distributions", "Correlation", "OHLC"])
 
     with tabs[0]:
-        st.plotly_chart(line_chart(price_frame, "timestamp", "close", title=f"{controls['symbol']} Closing Price"), use_container_width=True)
-        st.plotly_chart(area_chart(price_frame, "timestamp", "close", title="Area Chart of Closing Price"), use_container_width=True)
-        st.plotly_chart(moving_average_chart(price_frame, "timestamp", "close", controls["moving_average_choice"]), use_container_width=True)
+        st.plotly_chart(
+            line_chart(price_frame, x_col="date", y_col="close", title=f"{controls['symbol']} Closing Price"),
+            use_container_width=True,
+        )
+        st.plotly_chart(
+            area_chart(price_frame, x_col="date", y_col="close", title="Area Chart of Closing Price"),
+            use_container_width=True,
+        )
+        st.plotly_chart(
+            moving_average_chart(price_frame, x_col="date", y_col="close", ma_columns=controls["moving_average_choice"]),
+            use_container_width=True,
+        )
 
     with tabs[1]:
         if "rsi" in controls["indicator_choice"] and "rsi" in price_frame.columns:
-            st.plotly_chart(rsi_chart(price_frame, "timestamp"), use_container_width=True)
+            st.plotly_chart(rsi_chart(price_frame, x_col="date"), use_container_width=True)
         if "macd" in controls["indicator_choice"] and {"macd", "signal_line"}.issubset(price_frame.columns):
-            st.plotly_chart(macd_chart(price_frame, "timestamp"), use_container_width=True)
+            st.plotly_chart(macd_chart(price_frame, x_col="date"), use_container_width=True)
         if "volume" in controls["indicator_choice"] and "volume" in price_frame.columns:
-            st.plotly_chart(volume_chart(price_frame, "timestamp"), use_container_width=True)
+            st.plotly_chart(volume_chart(price_frame, x_col="date"), use_container_width=True)
         if "volatility" in controls["indicator_choice"] and "volatility_20" in price_frame.columns:
-            st.plotly_chart(volatility_chart(price_frame, "timestamp"), use_container_width=True)
+            st.plotly_chart(volatility_chart(price_frame, x_col="date"), use_container_width=True)
 
     with tabs[2]:
         st.plotly_chart(histogram(price_frame, "daily_return", title="Daily Return Distribution"), use_container_width=True)
@@ -129,8 +144,8 @@ def _render_charts(dataframe: pd.DataFrame, controls: dict) -> None:
 
     with tabs[4]:
         if {"open", "high", "low", "close"}.issubset(price_frame.columns):
-            st.plotly_chart(candlestick_chart(price_frame), use_container_width=True)
-            st.plotly_chart(ohlc_chart(price_frame), use_container_width=True)
+            st.plotly_chart(candlestick_chart(price_frame, x_col="date"), use_container_width=True)
+            st.plotly_chart(ohlc_chart(price_frame, x_col="date"), use_container_width=True)
 
 
 def _run_model(dataframe: pd.DataFrame, model_name: str) -> RegressionResult:
@@ -176,14 +191,22 @@ def main() -> None:
     )
 
     _show_metrics(dataframe)
-    _render_charts(dataframe, controls)
+    try:
+        _render_charts(dataframe, controls)
+    except Exception as exc:
+        st.warning("Charts could not be rendered for this dataset. The tabular analysis below is still available.")
+        st.caption(str(exc))
 
     st.subheader("Business Insights")
     outliers = detect_outliers_iqr(dataframe, "close")
     st.write(f"Potential closing-price outliers detected: {len(outliers)}")
     st.write("Highest trading-day volume and trend insights can be expanded in the final analysis report.")
 
-    _render_machine_learning(dataframe, controls["model_name"])
+    try:
+        _render_machine_learning(dataframe, controls["model_name"])
+    except Exception as exc:
+        st.warning("Machine learning results could not be generated for this run.")
+        st.caption(str(exc))
 
     st.subheader("Processed Data")
     st.dataframe(dataframe.tail(25), use_container_width=True)

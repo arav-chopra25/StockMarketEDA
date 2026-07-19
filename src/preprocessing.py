@@ -33,7 +33,7 @@ def _clip_iqr(series: pd.Series) -> pd.Series:
     return series.clip(lower=lower, upper=upper)
 
 
-def clean_stock_data(dataframe: pd.DataFrame, date_column: str = "timestamp", clip_outliers: bool = False) -> CleaningResult:
+def clean_stock_data(dataframe: pd.DataFrame, date_column: str = "date", clip_outliers: bool = False) -> CleaningResult:
     """Normalize Alpha Vantage stock data for analysis and modeling."""
 
     cleaned = standardize_column_names(dataframe)
@@ -53,7 +53,7 @@ def clean_stock_data(dataframe: pd.DataFrame, date_column: str = "timestamp", cl
     for column in numeric_columns:
         missing_values_filled += int(cleaned[column].isna().sum())
         cleaned[column] = cleaned[column].interpolate(method="linear", limit_direction="both")
-        cleaned[column] = cleaned[column].fillna(method="bfill").fillna(method="ffill")
+        cleaned[column] = cleaned[column].bfill().ffill()
 
     if clip_outliers:
         for column in [col for col in EXPECTED_PRICE_COLUMNS if col in cleaned.columns]:
@@ -73,7 +73,7 @@ def clean_stock_data(dataframe: pd.DataFrame, date_column: str = "timestamp", cl
     )
 
 
-def add_time_features(dataframe: pd.DataFrame, date_column: str = "timestamp") -> pd.DataFrame:
+def add_time_features(dataframe: pd.DataFrame, date_column: str = "date") -> pd.DataFrame:
     """Add calendar features that help EDA and seasonal analysis."""
 
     enriched = dataframe.copy()
