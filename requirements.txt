@@ -1,0 +1,16 @@
+pandas
+numpy
+plotly
+scikit-learn
+scipy
+statsmodels
+matplotlib
+streamlit
+alpha-vantage
+requests
+joblib
+python-dateutil
+
+# Optional report generators. Install them only in a compatible Python version.
+ydata-profiling; python_version < "3.14"
+sweetviz; python_version < "3.14"
