@@ -6,7 +6,7 @@ scipy
 statsmodels
 matplotlib
 streamlit
-alpha-vantage
+yfinance
 requests
 joblib
 python-dateutil
