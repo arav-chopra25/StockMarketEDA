@@ -143,7 +143,7 @@ def load_local_raw_data(ticker: str) -> pd.DataFrame | None:
     return None
 
 
-@dataclass(slots=True)
+@dataclass
 class StockDataClient:
     """Compatibility wrapper that exposes the legacy client-style API."""
 

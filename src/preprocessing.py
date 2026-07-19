@@ -13,7 +13,7 @@ from .utils import coerce_numeric_columns, standardize_column_names
 EXPECTED_PRICE_COLUMNS = ["open", "high", "low", "close", "adjusted_close", "volume", "dividend_amount", "split_coefficient"]
 
 
-@dataclass(slots=True)
+@dataclass
 class CleaningResult:
     """Return payload for preprocessing operations."""
 

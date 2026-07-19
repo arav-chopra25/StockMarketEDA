@@ -23,7 +23,7 @@ from .config import DEFAULT_RANDOM_STATE, MODELS_DIR
 from .feature_engineering import build_supervised_frame
 
 
-@dataclass(slots=True)
+@dataclass
 class RegressionResult:
     model: object
     predictions: np.ndarray
